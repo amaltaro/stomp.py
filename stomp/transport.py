@@ -181,8 +181,6 @@ class BaseTransport(stomp.listener.Publisher):
                 (f.headers, f.body) = self.notify('before_message', f.headers, f.body)
             if logging.isEnabledFor(logging.DEBUG):
                 logging.debug("Received frame: %r, headers=%r, body=%r", f.cmd, f.headers, f.body)
-            else:
-                logging.info("Received frame: %r, len(body)=%r", f.cmd, length(f.body))
             self.notify(frame_type, f.headers, f.body)
         else:
             logging.warning("Unknown response frame type: '%s' (frame length was %d)", frame_type, length(frame_str))
@@ -270,8 +268,6 @@ class BaseTransport(stomp.listener.Publisher):
 
         if logging.isEnabledFor(logging.DEBUG):
             logging.debug("Sending frame: %s", clean_lines(lines))
-        else:
-            logging.info("Sending frame: %r", frame.cmd or "heartbeat")
         self.send(packed_frame)
 
     def send(self, encoded_frame):
@@ -327,7 +323,7 @@ class BaseTransport(stomp.listener.Publisher):
         """
         Main loop listening for incoming data.
         """
-        logging.info("Starting receiver loop")
+        logging.debug("Starting receiver loop")
         notify_disconnected = True
         try:
             while self.running:
@@ -357,7 +353,7 @@ class BaseTransport(stomp.listener.Publisher):
             with self.__receiver_thread_exit_condition:
                 self.__receiver_thread_exited = True
                 self.__receiver_thread_exit_condition.notifyAll()
-            logging.info("Receiver loop ended")
+            logging.debug"Receiver loop ended")
             self.notify("receiver_loop_completed")
             if notify_disconnected and not self.__notified_on_disconnect:
                 self.notify('disconnected')
@@ -669,7 +665,7 @@ class Transport(BaseTransport):
                 return True  # no value to set always works
             try:
                 sock.setsockopt(fam, opt, val)
-                logging.info("keepalive: set %r option to %r on socket", name, val)
+                logging.debug("keepalive: set %r option to %r on socket", name, val)
             except:
                 logging.error("keepalive: unable to set %r option to %r on socket", name, val)
                 return False
@@ -695,15 +691,15 @@ class Transport(BaseTransport):
             if LINUX_KEEPALIVE_AVAIL:
                 ka_sig = 'linux'
                 ka_args = None
-                logging.info("keepalive: autodetected linux-style support")
+                logging.debug("keepalive: autodetected linux-style support")
             else:
                 logging.error("keepalive: unable to detect any implementation, DISABLED!")
                 return
 
         if ka_sig == 'linux':
-            logging.info("keepalive: activating linux-style support")
+            logging.debug("keepalive: activating linux-style support")
             if ka_args is None:
-                logging.info("keepalive: using system defaults")
+                logging.debug("keepalive: using system defaults")
                 ka_args = (None, None, None)
             lka_idle, lka_intvl, lka_cnt = ka_args
             if try_setsockopt(self.socket, 'enable', SOL_SOCKET, SO_KEEPALIVE, 1):
@@ -726,7 +722,7 @@ class Transport(BaseTransport):
             self.__reconnect_attempts_max == -1 ):
             for host_and_port in self.__host_and_ports:
                 try:
-                    logging.info("Attempting connection to host %s, port %s", host_and_port[0], host_and_port[1])
+                    logging.debug("Attempting connection to host %s, port %s", host_and_port[0], host_and_port[1])
                     self.socket = socket.create_connection(host_and_port, self.__timeout)
                     self.__enable_keepalive()
                     need_ssl = self.__need_ssl(host_and_port)
@@ -779,7 +775,7 @@ class Transport(BaseTransport):
                             raise SSLError("Server certificate validation failed: %s", errmsg)
 
                     self.current_host_and_port = host_and_port
-                    logging.info("Established connection to host %s, port %s", host_and_port[0], host_and_port[1])
+                    logging.debug("Established connection to host %s, port %s", host_and_port[0], host_and_port[1])
                     break
                 except socket.error:
                     self.socket = None

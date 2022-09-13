@@ -249,7 +249,7 @@ class HeartbeatListener(ConnectionListener):
         """
         Main loop for sending (and monitoring received) heartbeats.
         """
-        logging.info('Starting heartbeat loop')
+        logging.debug('Starting heartbeat loop')
         now = monotonic()
 
         # Setup the initial due time for the outbound heartbeat
